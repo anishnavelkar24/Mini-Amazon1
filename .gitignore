@@ -100,5 +100,6 @@ ENV/
 # mypy
 .mypy_cache/
 
-# custome files
+# custom files
 .idea
+db
