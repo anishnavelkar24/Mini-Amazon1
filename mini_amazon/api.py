@@ -1,9 +1,10 @@
 from mini_amazon import app
-from flask import request,render_template, Response
-from mini_amazon.models.product import Product
+from flask import request,render_template, send_from_directory,Response
+from mini_amazon.models.product import ProductModel
+from mini_amazon.models.user import UserModel
 
-prod = Product()
-
+prod = ProductModel()
+user_model=UserModel()
 
 @app.route('/health', methods=['GET'])
 def health():
@@ -47,3 +48,33 @@ def products():
                 updated_product['price'] = request.form['price']
                 prod.update_by_id(_id,updated_product)
             return Response(str({'status':'updated'}),mimetype='application/json',status=200)
+
+@app.route('/api/users/<action>', methods=['POST'])
+def user(action):
+    if action == 'login':
+        username = request.form.get('username',None)
+        password = request.form.get('password',None)
+        is_valid =user_model.authenticate(username,password)
+        if is_valid:
+            user_data = user_model.get_user_by_username(username)
+            return render_template('profile.html', name=user_data['name'])
+        else:
+            return render_template('index.html', login_msg='Invalid username/password')
+    elif action == 'signup':
+        name= request.form.get('name',None)
+        email = request.form.get('email',None)
+        username = request.form.get('username',None)
+        password = request.form.get('password',None)
+
+        # TODO : validate
+        already_exists = user_model.get_user_by_username(username)
+        if already_exists is not None:
+            return render_template('index.html', signup_msg='Username already exists')
+        else:
+            user_model.add_new_user(name,email,username,password)
+            return render_template('profile.html',name=name)
+    else:
+        status = {
+            'status':'Invalid action'
+        }
+        return Response(str(status),status=400,mimetype='application/jason')

@@ -1,7 +1,7 @@
-from flask import send_from_directory
+from flask import render_template
 from mini_amazon import app
 
 
 @app.route('/', methods=['GET'])
 def index():
-    return send_from_directory('./mini_amazon/static', 'index.html')
+    return render_template('index.html', msg='20% cash back')

@@ -3,8 +3,7 @@ from pymongo import MongoClient
 from bson.objectid import ObjectId
 
 
-class Product:
-
+class ProductModel:
     def __init__(self):
         client = MongoClient('localhost', 27017)
         self.db = client.tvb_amazon
