@@ -4,7 +4,8 @@
 
 <h2>Login</h2>
 <p>{{ login_msg }}</p>
-<form action="/api/users/login" method="post">
+<form action="/api/users" method="post">
+     <input type="text" name="op_type" value="login" hidden>
     Username:<input type="text" name="username">
     Password:<input type="password" name="password">
     <input type="submit" name="login">
@@ -13,7 +14,8 @@
 
 <h2>Sign Up</h2>
 <p>{{ signup_msg }}</p>
-<form action="/api/users/signup" method="post">
+<form action="/api/users" method="post">
+     <input type="text" name="op_type" value="signup" hidden>
     Name:<input type="text" name="name">
     Email:<input type="email" name="email">
     Username:<input type="username" name="username">

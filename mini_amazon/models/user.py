@@ -1,4 +1,5 @@
 from pymongo import MongoClient
+from bson.objectid import ObjectId
 class UserModel:
 
     def __init__(self):
@@ -38,11 +39,30 @@ class UserModel:
 
         for user in cursor:
             return user
-    #
-    # def delete_by_id(self, _id):
-    #     self.db.products.delete_one({'_id': ObjectId(_id)})
-    #
-    # def update_by_id(self, _id, updated_product):
-    #     condition = dict()
-    #     condition['_id'] = ObjectId(_id)
-    #     self.db.products.update_one(filter=condition, update={'$set': updated_product})
+
+    def add_product_to_cart(self,user_id,product_id):
+        print(user_id)
+        #print(ObjectId(user_id))
+        condition = {'_id': ObjectId(user_id)}
+
+        cursor = self.db.users.find(condition)
+
+        user_data = cursor[0] if cursor.count > 0 else None
+        if user_data is None:
+            return False
+        if 'cart' not in user_data:
+            user_data['cart'] = []
+
+        if ObjectId(product_id) not in user_data['cart']:
+            user_data['cart'].append(ObjectId(product_id))
+            self.db.users.update_one(filter=condition, update={'$set': user_data})
+
+            return True
+
+    def get_by_id(self, _id):
+        query = {
+                    '_id': ObjectId(_id)
+            }
+        cursor = self.db.users.find(query)
+        user = cursor[0] if cursor.count() > 0 else None
+        return user
