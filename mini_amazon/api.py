@@ -1,9 +1,9 @@
 from mini_amazon import app
-from flask import request,render_template, send_from_directory,Response
+from flask import request,render_template, send_from_directory,Response,jsonify
 from mini_amazon.models.product import ProductModel
 from mini_amazon.models.user import UserModel
 
-prod = ProductModel()
+product_model = ProductModel()
 user_model=UserModel()
 
 @app.route('/health', methods=['GET'])
@@ -17,7 +17,7 @@ def products():
         query=request.args['name']
         user_id = request.args['user_id']
 
-        matches = prod.search_by_name(query)
+        matches = product_model.search_by_name(query)
         output_type = request.args.get('output_type',None)
         if output_type == 'html':
             return render_template('results.html',query=query,results=matches, user_id = user_id)
@@ -30,12 +30,12 @@ def products():
             product = dict()
             product['name'] = request.form['name']
             product['description'] = request.form['description']
-            product['price'] = request.form['price']
-            prod.save(product)
+            product['price'] = int(request.form['price'])
+            product_model.save(product)
             return Response(str({'status':'success'}),mimetype='application/json',status= 200)
         elif request.form['op_type']=="delete":
             _id = request.form['_id']
-            prod.delete_by_id(_id)
+            product_model.delete_by_id(_id)
             return Response(str({'status': 'success'}), mimetype='application/json', status=200)
         elif request.form['op_type'] == "update":
             _id = request.form['_id']
@@ -46,8 +46,8 @@ def products():
             if request.form['description']!='':
                 updated_product['desc'] = request.form['description']
             if request.form['price']!='':
-                updated_product['price'] = request.form['price']
-                prod.update_by_id(_id,updated_product)
+                updated_product['price'] = int(request.form['price'])
+                product_model.update_by_id(_id, updated_product)
             return Response(str({'status':'updated'}),mimetype='application/json',status=200)
 
 @app.route('/api/users', methods=['POST'])
@@ -75,7 +75,7 @@ def user():
 
         if is_valid:
             user_model.add_new_user(name, email, username, password)
-            user_data = user_model.get_by_username(username)
+            user_data = user_model.get_user_by_username(username)
             return render_template('profile.html',
                                    name=name,
                                    user_id=user_data['_id'])
@@ -89,13 +89,73 @@ def user():
 
 @app.route('/api/cart', methods=['POST'])
 def cart():
-    user_id = request.form.get('user_id', None)
-    product_id = request.form.get('product_id', None)
-    print (user_id)
-    success = user_model.add_product_to_cart(user_id, product_id)
+    op_type=request.form.get('op_type',None)
+    if op_type == "get":
+        user_id = request.form.get('user_id',None)
+        user_data = user_model.get_by_id(user_id)
+        product_ids = user_model.get_cart(user_id)
+        products = [product_model.get_product(product_id) for product_id in product_ids]
+        total = 0
+        for p in products:
+            total = total + p['price']
 
-        # irrespective of success
-    user_data = user_model.get_by_id(user_id)
-    return render_template('profile.html',
-                            name=user_data['name'],
-                            user_id=user_data['_id'])
+        output_type = request.form.get('output_type',None)
+        if output_type == 'html':
+             return render_template('cart.html',
+                                   name = user_data['name'],
+                                   products = products,
+                                   user_id=user_id,
+                                    total=total)
+        else:
+
+            json_products = {
+                'products':products
+            }
+
+            return jsonify(json_products)
+
+    elif op_type == "add":
+         user_id = request.form.get('user_id', None)
+         product_id = request.form.get('product_id', None)
+         print (user_id)
+         success = user_model.add_product_to_cart(user_id, product_id)
+
+            # irrespective of success
+         user_data = user_model.get_by_id(user_id)
+         return render_template('profile.html',
+                                name=user_data['name'],
+                                user_id=user_data['_id'])
+    elif op_type == "remove":
+         user_id=request.form.get('user_id',None)
+         user_data=user_model.get_by_id(user_id)
+
+         product_id =request.form.get('product_id',None)
+         user_model.remove_product_from_cart(user_id,product_id)
+
+         product_ids = user_model.get_cart(user_id)
+         products = [product_model.get_product(product_id) for product_id in product_ids]
+         total=0
+         for p in products:
+             total = total + p['price']
+             print(total)
+         output_type = request.form.get('output_type', None)
+         if output_type == 'html':
+            return render_template('cart.html',
+                                   name=user_data['name'],
+                                   products=products,
+                                   user_id=user_id,
+                                   total = total)
+         else:
+            for p in products:
+                p['_id'] = str(p['_id'])
+            json_products = {
+                'products': products
+            }
+
+            return jsonify(json_products)
+
+    else:
+        status = {
+            'status': 'Invalid op_type'
+        }
+        return jsonify

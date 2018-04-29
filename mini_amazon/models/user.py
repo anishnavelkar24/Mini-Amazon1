@@ -53,11 +53,20 @@ class UserModel:
         if 'cart' not in user_data:
             user_data['cart'] = []
 
-        if ObjectId(product_id) not in user_data['cart']:
-            user_data['cart'].append(ObjectId(product_id))
+        if product_id not in user_data['cart']:
+            user_data['cart'].append(product_id)
             self.db.users.update_one(filter=condition, update={'$set': user_data})
 
             return True
+
+    def remove_product_from_cart(self,user_id,product_id):
+        cart = self.get_cart(user_id)
+        cart.remove(product_id)
+
+        condition = dict()
+        condition['_id'] = ObjectId(user_id)
+        self.db.users.update_one(filter=condition, update={'$set':{'cart':cart}})
+        return cart
 
     def get_by_id(self, _id):
         query = {
@@ -66,3 +75,11 @@ class UserModel:
         cursor = self.db.users.find(query)
         user = cursor[0] if cursor.count() > 0 else None
         return user
+
+    def get_cart(self,_id):
+        query = {
+            '_id':ObjectId(_id)
+        }
+        cursor=self.db.users.find(query)
+        cart=cursor[0]['cart'] if cursor.count()>0 else None
+        return cart

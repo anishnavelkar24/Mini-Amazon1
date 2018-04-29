@@ -27,3 +27,12 @@ class ProductModel:
         condition=dict()
         condition['_id'] = ObjectId(_id)
         self.db.products.update_one(filter = condition,update = {'$set':updated_product})
+
+    def get_product(self,_id):
+        query = {
+            '_id':ObjectId(_id)
+        }
+
+        cursor = self.db.products.find(query)
+        product = cursor[0] if cursor.count()>0 else None
+        return product

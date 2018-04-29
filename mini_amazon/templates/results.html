@@ -7,7 +7,8 @@
         price:<b><i>{{result.price}}</i></b><br>
 
         <form action="/api/cart" method="POST">
-            user : <input type="text" name="user_id" value="{{ user_id }}" hidden>
+            <input type="text" name="user_id" value="{{ user_id }}" hidden>
+            <input type="text" name="op_type" value="add" hidden>
             <input type="text" name="product_id" value="{{ result._id }}" hidden><br>
             <input type="submit" value="Add to cart">
         </form>
@@ -26,7 +27,7 @@
             Updated Description:<br>
             <input type="text" name="description"><br>
             Updated Price:<br>
-            <input type="text" name="price"><br>
+            <input type="number" name="price"><br>
             <input type="submit" value="Update">
         </form>
         <form action="https://www.paypal.com/cgi-bin/webscr" method="post">
