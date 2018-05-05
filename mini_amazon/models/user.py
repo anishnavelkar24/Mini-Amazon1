@@ -14,7 +14,8 @@ class UserModel:
             'name': name,
             'email':email,
             'username':username,
-            'password':password
+            'password':password,
+            'cart': []
 
         }
         self.db.users.insert_one(user)

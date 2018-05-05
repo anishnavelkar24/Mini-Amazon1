@@ -71,7 +71,7 @@ def user():
         password = request.form.get('password', None)
 
         # TODO : validation
-        is_valid = True
+        is_valid = True if user_model.get_user_by_username(username=username) is None else False
 
         if is_valid:
             user_model.add_new_user(name, email, username, password)
